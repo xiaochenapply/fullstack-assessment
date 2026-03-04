@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,22 +33,41 @@ interface Product {
   retailPrice: number;
 }
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [subCategories, setSubCategories] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
-    undefined
+    searchParams.get("category") || undefined
   );
   const [selectedSubCategory, setSelectedSubCategory] = useState<
     string | undefined
-  >(undefined);
+  >(searchParams.get("subCategory") || undefined);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10)
+  );
   const [totalProducts, setTotalProducts] = useState(0);
   const ITEMS_PER_PAGE = 20;
+
+  // Sync state to URL
+  const updateURL = useCallback(() => {
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (selectedCategory) params.set("category", selectedCategory);
+    if (selectedSubCategory) params.set("subCategory", selectedSubCategory);
+    if (page > 1) params.set("page", String(page));
+    const query = params.toString();
+    const newUrl = query ? `?${query}` : window.location.pathname;
+    window.history.replaceState(null, "", newUrl);
+  }, [debouncedSearch, selectedCategory, selectedSubCategory, page]);
+
+  useEffect(() => {
+    updateURL();
+  }, [updateURL]);
 
   // Debounce search input
   useEffect(() => {
@@ -287,5 +307,19 @@ export default function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
