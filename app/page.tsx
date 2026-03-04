@@ -13,13 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -85,6 +79,7 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
+    setSelectedSubCategory(undefined);
     if (selectedCategory) {
       fetch(`/api/subcategories?category=${encodeURIComponent(selectedCategory)}`)
         .then((res) => res.json())
@@ -92,7 +87,6 @@ function HomeContent() {
         .catch((err) => console.error('Failed to load subcategories:', err));
     } else {
       setSubCategories([]);
-      setSelectedSubCategory(undefined);
     }
   }, [selectedCategory]);
 
@@ -144,42 +138,24 @@ function HomeContent() {
               />
             </div>
 
-            <Select
-              value={selectedCategory || "all"}
-              onValueChange={(value) => setSelectedCategory(value === "all" ? undefined : value)}
-            >
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+              options={categories}
+              placeholder="All Categories"
+              allLabel="All Categories"
+              className="w-full md:w-[200px]"
+            />
 
             {selectedCategory && subCategories.length > 0 && (
-              <Select
-                value={selectedSubCategory || "all"}
-                onValueChange={(value) =>
-                  setSelectedSubCategory(value === "all" ? undefined : value)
-                }
-              >
-                <SelectTrigger className="w-full md:w-[200px]">
-                  <SelectValue placeholder="All Subcategories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Subcategories</SelectItem>
-                  {subCategories.map((subCat) => (
-                    <SelectItem key={subCat} value={subCat}>
-                      {subCat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={selectedSubCategory}
+                onValueChange={setSelectedSubCategory}
+                options={subCategories}
+                placeholder="All Subcategories"
+                allLabel="All Subcategories"
+                className="w-full md:w-[200px]"
+              />
             )}
 
             {(search || selectedCategory || selectedSubCategory) && (
@@ -245,12 +221,9 @@ function HomeContent() {
                       <CardTitle className="text-base line-clamp-2 mb-2" title={product.title}>
                         {product.title}
                       </CardTitle>
-                      <CardDescription className="flex gap-2 flex-wrap">
+                      <CardDescription>
                         <Badge variant="secondary">
                           {product.categoryName}
-                        </Badge>
-                        <Badge variant="outline">
-                          {product.subCategoryName}
                         </Badge>
                       </CardDescription>
                       <p className="text-lg font-bold mt-2">
