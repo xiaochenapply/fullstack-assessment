@@ -47,6 +47,8 @@ function HomeContent() {
     string | undefined
   >(searchParams.get("subCategory") || undefined);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [page, setPage] = useState(
     parseInt(searchParams.get("page") || "1", 10)
   );
@@ -78,14 +80,16 @@ function HomeContent() {
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
-      .then((data) => setCategories(data.categories));
+      .then((data) => setCategories(data.categories))
+      .catch((err) => console.error('Failed to load categories:', err));
   }, []);
 
   useEffect(() => {
     if (selectedCategory) {
       fetch(`/api/subcategories?category=${encodeURIComponent(selectedCategory)}`)
         .then((res) => res.json())
-        .then((data) => setSubCategories(data.subCategories));
+        .then((data) => setSubCategories(data.subCategories))
+        .catch((err) => console.error('Failed to load subcategories:', err));
     } else {
       setSubCategories([]);
       setSelectedSubCategory(undefined);
@@ -99,6 +103,7 @@ function HomeContent() {
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams();
     if (debouncedSearch) params.append("search", debouncedSearch);
     if (selectedCategory) params.append("category", selectedCategory);
@@ -107,13 +112,20 @@ function HomeContent() {
     params.append("offset", String((page - 1) * ITEMS_PER_PAGE));
 
     fetch(`/api/products?${params}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch products');
+        return res.json();
+      })
       .then((data) => {
         setProducts(data.products);
         setTotalProducts(data.total);
         setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to load products');
+        setLoading(false);
       });
-  }, [debouncedSearch, selectedCategory, selectedSubCategory, page]);
+  }, [debouncedSearch, selectedCategory, selectedSubCategory, page, retryCount]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -187,7 +199,12 @@ function HomeContent() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {loading ? (
+        {error ? (
+          <div className="text-center py-12">
+            <p className="text-destructive mb-4">{error}</p>
+            <Button onClick={() => setRetryCount((c) => c + 1)} variant="outline">Retry</Button>
+          </div>
+        ) : loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Loading products...</p>
           </div>
