@@ -83,7 +83,7 @@ function HomeContent() {
 
   useEffect(() => {
     if (selectedCategory) {
-      fetch(`/api/subcategories`)
+      fetch(`/api/subcategories?category=${encodeURIComponent(selectedCategory)}`)
         .then((res) => res.json())
         .then((data) => setSubCategories(data.subCategories));
     } else {
