@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -45,6 +45,9 @@ export default function Home() {
     string | undefined
   >(undefined);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const ITEMS_PER_PAGE = 20;
 
   // Debounce search input
   useEffect(() => {
@@ -69,21 +72,28 @@ export default function Home() {
     }
   }, [selectedCategory]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, selectedCategory, selectedSubCategory]);
+
   useEffect(() => {
     setLoading(true);
     const params = new URLSearchParams();
     if (debouncedSearch) params.append("search", debouncedSearch);
     if (selectedCategory) params.append("category", selectedCategory);
     if (selectedSubCategory) params.append("subCategory", selectedSubCategory);
-    params.append("limit", "20");
+    params.append("limit", String(ITEMS_PER_PAGE));
+    params.append("offset", String((page - 1) * ITEMS_PER_PAGE));
 
     fetch(`/api/products?${params}`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(data.products);
+        setTotalProducts(data.total);
         setLoading(false);
       });
-  }, [debouncedSearch, selectedCategory, selectedSubCategory]);
+  }, [debouncedSearch, selectedCategory, selectedSubCategory, page]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,7 +178,7 @@ export default function Home() {
         ) : (
           <>
             <p className="text-sm text-muted-foreground mb-4">
-              Showing {products.length} products
+              Showing {(page - 1) * ITEMS_PER_PAGE + 1}-{Math.min(page * ITEMS_PER_PAGE, totalProducts)} of {totalProducts} products
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product) => (
@@ -219,6 +229,60 @@ export default function Home() {
                 </Link>
               ))}
             </div>
+
+            {totalProducts > ITEMS_PER_PAGE && (() => {
+              const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+              const getPageNumbers = () => {
+                const pages: (number | '...')[] = [];
+                if (totalPages <= 9) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (page > 4) pages.push('...');
+                  for (let i = Math.max(2, page - 2); i <= Math.min(totalPages - 1, page + 2); i++) {
+                    pages.push(i);
+                  }
+                  if (page < totalPages - 3) pages.push('...');
+                  pages.push(totalPages);
+                }
+                return pages;
+              };
+              return (
+                <div className="flex items-center justify-center gap-1 mt-8">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  {getPageNumbers().map((p, idx) =>
+                    p === '...' ? (
+                      <span key={`dots-${idx}`} className="px-2 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <Button
+                        key={p}
+                        variant={page === p ? "default" : "outline"}
+                        size="sm"
+                        className="min-w-[36px]"
+                        onClick={() => setPage(p)}
+                      >
+                        {p}
+                      </Button>
+                    )
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page >= totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })()}
           </>
         )}
       </main>
