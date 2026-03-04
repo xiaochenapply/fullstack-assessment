@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -27,6 +27,7 @@ export default function ProductPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedImage, setSelectedImage] = useState(0);
+    const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
     useEffect(() => {
         if (!sku) return;
@@ -47,6 +48,44 @@ export default function ProductPage() {
                 setLoading(false);
             });
     }, [sku]);
+
+    // Fetch related products
+    useEffect(() => {
+        if (!product) return;
+
+        // Try subcategory first
+        const subCatParams = new URLSearchParams({
+            subCategory: product.subCategoryName,
+            limit: '5',
+        });
+        fetch(`/api/products?${subCatParams}`)
+            .then((res) => res.json())
+            .then((data) => {
+                const filtered = (data.products as Product[]).filter(
+                    (p) => p.stacklineSku !== product.stacklineSku
+                );
+                if (filtered.length > 0) {
+                    setRelatedProducts(filtered);
+                } else {
+                    // Fallback to category
+                    const catParams = new URLSearchParams({
+                        category: product.categoryName,
+                        limit: '5',
+                    });
+                    fetch(`/api/products?${catParams}`)
+                        .then((res) => res.json())
+                        .then((data) => {
+                            setRelatedProducts(
+                                (data.products as Product[]).filter(
+                                    (p) => p.stacklineSku !== product.stacklineSku
+                                )
+                            );
+                        })
+                        .catch(() => { });
+                }
+            })
+            .catch(() => { });
+    }, [product]);
 
     const handlePrevImage = () => {
         if (!product) return;
@@ -203,6 +242,41 @@ export default function ProductPage() {
                         )}
                     </div>
                 </div>
+
+                {relatedProducts.length > 0 && (
+                    <div className="mt-12">
+                        <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            {relatedProducts.map((related) => (
+                                <Link key={related.stacklineSku} href={`/product/${related.stacklineSku}`}>
+                                    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer">
+                                        <CardContent className="p-0">
+                                            <div className="relative h-36 w-full overflow-hidden rounded-t-lg bg-muted">
+                                                {related.imageUrls[0] ? (
+                                                    <Image
+                                                        src={related.imageUrls[0]}
+                                                        alt={related.title}
+                                                        fill
+                                                        className="object-contain p-3"
+                                                        sizes="(max-width: 768px) 50vw, 20vw"
+                                                    />
+                                                ) : (
+                                                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                                                        No image
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                        <CardFooter className="flex-1 flex flex-col items-start pt-3 pb-3">
+                                            <p className="text-sm line-clamp-2 mb-1">{related.title}</p>
+                                            <p className="text-sm font-bold mt-auto">${related.retailPrice.toFixed(2)}</p>
+                                        </CardFooter>
+                                    </Card>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
