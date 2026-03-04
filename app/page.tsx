@@ -43,9 +43,10 @@ function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [page, setPage] = useState(
-    parseInt(searchParams.get("page") || "1", 10)
-  );
+  const [page, setPage] = useState(() => {
+    const p = parseInt(searchParams.get("page") || "1", 10);
+    return isNaN(p) || p < 1 ? 1 : p;
+  });
   const [totalProducts, setTotalProducts] = useState(0);
   const ITEMS_PER_PAGE = 20;
 

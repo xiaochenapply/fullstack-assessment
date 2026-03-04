@@ -34,6 +34,7 @@ export default function ProductPage() {
 
         setLoading(true);
         setError(null);
+        setSelectedImage(0);
         fetch(`/api/products/${sku}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Product not found');
@@ -215,8 +216,12 @@ export default function ProductPage() {
                     <div className="space-y-6">
                         <div>
                             <div className="flex gap-2 mb-2">
-                                <Badge variant="secondary">{product.categoryName}</Badge>
-                                <Badge variant="outline">{product.subCategoryName}</Badge>
+                                <Link href={`/?category=${encodeURIComponent(product.categoryName)}`}>
+                                    <Badge variant="secondary" className="cursor-pointer hover:opacity-80">{product.categoryName}</Badge>
+                                </Link>
+                                <Link href={`/?category=${encodeURIComponent(product.categoryName)}&subCategory=${encodeURIComponent(product.subCategoryName)}`}>
+                                    <Badge variant="outline" className="cursor-pointer hover:opacity-80">{product.subCategoryName}</Badge>
+                                </Link>
                             </div>
                             <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
                             <p className="text-2xl font-bold text-primary mb-2">
