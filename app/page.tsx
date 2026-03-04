@@ -29,6 +29,7 @@ interface Product {
   categoryName: string;
   subCategoryName: string;
   imageUrls: string[];
+  retailPrice: number;
 }
 
 export default function Home() {
@@ -175,10 +176,10 @@ export default function Home() {
                   key={product.stacklineSku}
                   href={`/product/${product.stacklineSku}`}
                 >
-                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                  <Card className="h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden rounded-t-lg bg-muted">
-                        {product.imageUrls[0] && (
+                        {product.imageUrls[0] ? (
                           <Image
                             src={product.imageUrls[0]}
                             alt={product.title}
@@ -186,11 +187,15 @@ export default function Home() {
                             className="object-contain p-4"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                            No image
+                          </div>
                         )}
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-4">
-                      <CardTitle className="text-base line-clamp-2 mb-2">
+                    <CardContent className="pt-4 flex-1">
+                      <CardTitle className="text-base line-clamp-2 mb-2" title={product.title}>
                         {product.title}
                       </CardTitle>
                       <CardDescription className="flex gap-2 flex-wrap">
@@ -201,8 +206,11 @@ export default function Home() {
                           {product.subCategoryName}
                         </Badge>
                       </CardDescription>
+                      <p className="text-lg font-bold mt-2">
+                        ${product.retailPrice.toFixed(2)}
+                      </p>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="mt-auto">
                       <Button variant="outline" className="w-full">
                         View Details
                       </Button>
