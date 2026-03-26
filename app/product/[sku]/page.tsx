@@ -244,7 +244,7 @@ export default function ProductPage() {
 
                         {product.featureBullets && product.featureBullets.length > 0 && (
                             <Card>
-                                <CardContent className="pt-6">
+                                <CardContent className="py-6">
                                     <h2 className="text-lg font-semibold mb-3">Features</h2>
                                     <ul className="space-y-2">
                                         {product.featureBullets.map((feature, idx) => (
@@ -266,7 +266,7 @@ export default function ProductPage() {
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {relatedProducts.map((related) => (
                                 <Link key={related.stacklineSku} href={`/product/${related.stacklineSku}`}>
-                                    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer">
+                                    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer gap-1">
                                         <CardContent className="p-0">
                                             <div className="relative h-36 w-full overflow-hidden rounded-t-lg bg-muted">
                                                 {related.imageUrls[0] ? (
