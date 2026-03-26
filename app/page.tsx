@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { AddToCart } from "@/components/add-to-cart";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -126,7 +127,6 @@ function HomeContent() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-4xl font-bold mb-6">StackShop</h1>
 
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="relative flex-1">
@@ -196,11 +196,8 @@ function HomeContent() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product) => (
-                <Link
-                  key={product.stacklineSku}
-                  href={`/product/${product.stacklineSku}`}
-                >
-                  <Card className="h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer">
+                <Card key={product.stacklineSku} className="group h-full flex flex-col hover:shadow-lg transition-shadow">
+                  <Link href={`/product/${product.stacklineSku}`} className="cursor-pointer">
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden rounded-t-lg bg-muted">
                         {product.imageUrls[0] ? (
@@ -231,13 +228,26 @@ function HomeContent() {
                         ${product.retailPrice.toFixed(2)}
                       </p>
                     </CardContent>
-                    <CardFooter className="mt-auto">
-                      <Button variant="outline" className="w-full">
+                  </Link>
+                  <CardFooter className="mt-auto gap-2">
+                    <Link href={`/product/${product.stacklineSku}`} className="flex-1">
+                      <Button variant="outline" className="w-full" size="sm">
                         View Details
                       </Button>
-                    </CardFooter>
-                  </Card>
-                </Link>
+                    </Link>
+                    <div className="shrink-0 w-20">
+                      <AddToCart
+                        product={{
+                          stacklineSku: product.stacklineSku,
+                          title: product.title,
+                          retailPrice: product.retailPrice,
+                          imageUrl: product.imageUrls[0] || '',
+                        }}
+                        variant="compact"
+                      />
+                    </div>
+                  </CardFooter>
+                </Card>
               ))}
             </div>
 

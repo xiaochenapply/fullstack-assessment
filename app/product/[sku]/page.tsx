@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AddToCart } from '@/components/add-to-cart';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -228,6 +229,17 @@ export default function ProductPage() {
                                 ${product.retailPrice.toFixed(2)}
                             </p>
                             <p className="text-sm text-muted-foreground">SKU: {product.retailerSku}</p>
+                            <div className="mt-4">
+                                <AddToCart
+                                    product={{
+                                        stacklineSku: product.stacklineSku,
+                                        title: product.title,
+                                        retailPrice: product.retailPrice,
+                                        imageUrl: product.imageUrls[0] || '',
+                                    }}
+                                    variant="product"
+                                />
+                            </div>
                         </div>
 
                         {product.featureBullets && product.featureBullets.length > 0 && (
